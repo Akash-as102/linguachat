@@ -6,8 +6,9 @@ import ThemedInput from '../../components/ThemedInput'
 import { useLocalSearchParams } from 'expo-router'
 import ThemedButton from '../../components/ThemedButton';
 import { useChatStore } from '../../store/chatStore'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSocket } from '../../libs/SocketContext'
+import ThemedMessageBubble from '../../components/ThemedMessageBubble'
 
 const ChatPage = () => {
   const { chatUserId, name } = useLocalSearchParams()
@@ -15,11 +16,25 @@ const ChatPage = () => {
   const {messages} = useChatStore();
   const chatUserMessages= messages[chatUserId]
   const socketRef = useSocket();
-
+  const flatListRef=useRef(null)
+  
   function handleSend(){
     socketRef.current.emit('sendMessage',{chatUserId,text});
     setText('')
   }
+
+  /* Scroll to latest */ 
+
+  useEffect(()=>{
+    if(chatUserMessages.length==0)return 
+    requestAnimationFrame(()=>{
+      flatListRef.current?.scrollToIndex({
+      index:chatUserMessages.length-1,
+      animated:false,
+      viewPosition:1
+      })
+    })
+  },[chatUserMessages.length])
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -36,16 +51,24 @@ const ChatPage = () => {
       >
         {/* Messages */}
         <FlatList
+          ref={flatListRef}
           data={chatUserMessages}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <ThemedView style={styles.messageBubble}>
-              <ThemedText>{item.text}</ThemedText>
-              <ThemedText>{item.status}</ThemedText>
-            </ThemedView>
-          )}
+          renderItem={({ item }) => {
+            const isSent=socketRef.current.auth.userId==item.senderId
+            return <ThemedMessageBubble item={item} isSent={isSent}  />
+          }}
           contentContainerStyle={{ padding: 10 }}
           style={styles.messagesList}
+          onScrollToIndexFailed={(info)=>{
+            setTimeout(()=>{
+              flatListRef.current?.scrollToIndex({
+                index:info.index,
+                animated:false,
+                viewPosition:1
+              })
+            },50)
+          }}
         />
 
         {/* Input */}
@@ -83,12 +106,23 @@ const styles = StyleSheet.create({
   messagesList: {
     flex: 1,
   },
-  messageBubble: {
+  messageBubbleLeft: {
     padding: 10,
     backgroundColor: 'grey',
     borderRadius: 8,
     marginVertical: 5,
     alignSelf: 'flex-start', // or 'flex-end' for sent messages
+    maxWidth:"75%",
+    minWidth:"25%"
+  },
+  messageBubbleRight:{
+    padding: 10,
+    backgroundColor: 'grey',
+    borderRadius: 8,
+    marginVertical: 5,
+    alignSelf: 'flex-end',
+    maxWidth:"75%",
+    minWidth:"25%"
   },
   input: {
     minHeight: 50,

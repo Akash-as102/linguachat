@@ -9,6 +9,22 @@ module.exports=(io)=>{
 
         onlineUsers.set(userId,socket.id);
 
+        socket.on('getChatList',async ()=>{
+            const chatList=await prisma.chat.findMany({
+            where:{userId},
+            include:{
+                peer:{
+                    select:{
+                        name:true,
+                        phone:true
+                    }
+                }
+            },
+            orderBy:{lastMessageAt:'desc'}
+            })
+            socket.emit('chatList',chatList);
+        })
+
         socket.on('sendMessage',async ({chatUserId,text})=>{
             const receiverId=parseInt(chatUserId)
             const message=await prisma.message.create({
@@ -18,6 +34,47 @@ module.exports=(io)=>{
                     text
                 }
             })
+            const userA=await prisma.chat.upsert({
+                where:{
+                    userId_peerId:{
+                        userId:socket.userId,
+                        peerId:receiverId
+                    }
+                },
+                update:{
+                    lastMessage:text,
+                    lastMessageAt:new Date(),
+                    unreadCount:0
+                },
+                create:{
+                    userId:socket.userId,
+                    peerId:receiverId,
+                    lastMessage:text,
+                    lastMessageAt:new Date(),
+                    unreadCount:0
+                }
+            })
+            const userB=await prisma.chat.upsert({
+                where:{
+                    userId_peerId:{
+                        userId:receiverId,
+                        peerId:socket.userId
+                    }
+                },
+                update:{
+                    lastMessage:text,
+                    lastMessageAt:new Date(),
+                    unreadCount:{increment:1}
+                },
+                create:{
+                    userId:receiverId,
+                    peerId:socket.userId,
+                    lastMessage:text,
+                    lastMessageAt:new Date(),
+                    unreadCount:1
+                }
+            })
+
             const receiverSocketId=onlineUsers.get(receiverId)
             
             if(receiverSocketId){

@@ -10,11 +10,30 @@ const SocketContext=createContext(null);
 export const SocketProvider=({children})=>{
     const socketRef=useRef(null);
     const {user}=useAuth()
-
+    const {setChats}=useChatStore();
 
     useEffect(()=>{
         if(!user)return;
         socketRef.current=connectWS(user.id)
+
+        socketRef.current.on('chatList',(chatList)=>{
+            const chatsMap={}
+            const chatOrder=[]
+            chatList.forEach(chat=>{
+                chatsMap[chat.peerId]={
+                    userId:chat.peerId,
+                    lastMessage:chat.lastMessage,
+                    updatedAt:chat.lastMessageAt,
+                    unreadCount:chat.unreadCount,
+                    name:chat.peer.name,
+                    phone:chat.peer.phone
+                }
+                chatOrder.push(chat.peerId);
+            })
+            setChats(chatsMap,chatOrder)
+        })
+
+        socketRef.current.emit('getChatList');
 
         socketRef.current.on("receiveMessage",async (message)=>{
             const {addMessage,incrementUnread,activeChatId,messageStatusUpdate,chats,setChatUserInfo} =useChatStore.getState()

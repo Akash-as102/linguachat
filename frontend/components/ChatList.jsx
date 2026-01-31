@@ -15,9 +15,10 @@ const ChatList = ({style,...props}) => {
         {chatOrder.map(id=>{
           const message=chats[id];
           if(!message)return null
+          const lastMessage= typeof(message.lastMessage)=='object'? message.lastMessage.text:message.lastMessage
           return <ThemedChat key={id} name={message.name} 
             lastMessageTime={message.updatedAt}
-            lastMessage={message.lastMessage.text}
+            lastMessage={lastMessage}
             chatUserId={message.userId}
             unreadCount={message.unreadCount}
           />

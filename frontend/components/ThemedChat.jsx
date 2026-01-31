@@ -54,7 +54,7 @@ const ThemedChat = ({style,name,chatUserId,profileUrl,unreadCount,lastMessageTim
                 {phone && <Text style={{marginTop:2}}>{phone}</Text>}
                 {unreadCount>0 ? <Text style={{
                     color:'blue',
-                    marginTop:4
+                    marginTop:4,
                 }}>{unreadCount} New Message at {formatChatTime(lastMessageTime)}</Text>:
                     (!isSearch && <View style={styles.lastMessage}><Text>{lastMessage}</Text><Text>{formatChatTime(lastMessageTime)}</Text></View>)
                 }
@@ -72,6 +72,7 @@ const styles=StyleSheet.create({
     lastMessage:{
         flexDirection:'row',
         justifyContent:'space-between',
-        marginVertical:5
+        marginVertical:5,
+        maxHeight:20,
     }
 })
