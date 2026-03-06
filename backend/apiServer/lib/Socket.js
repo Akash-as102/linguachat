@@ -1,13 +1,14 @@
 const prisma=require('../../lib/prisma')
+const {translate}=require('./translate')
 
 const onlineUsers=new Map();
 
 module.exports=(io)=>{
     io.on('connection',async (socket)=>{
         const userId=socket.handshake.auth.userId;
+        const lang=socket.handshake.auth.lang;
         socket.userId=userId
-
-        onlineUsers.set(userId,socket.id);
+        onlineUsers.set(userId,[socket.id,lang]);
 
         socket.on('getChatList',async ()=>{
             const chatList=await prisma.chat.findMany({
@@ -16,7 +17,8 @@ module.exports=(io)=>{
                 peer:{
                     select:{
                         name:true,
-                        phone:true
+                        phone:true,
+                        profileUrl:true
                     }
                 }
             },
@@ -24,7 +26,24 @@ module.exports=(io)=>{
             })
             socket.emit('chatList',chatList);
         })
-
+        socket.on('getMessages',async ({chatUserId})=>{
+            const receiverId=parseInt(chatUserId)
+            const messages=await prisma.message.findMany({
+                where:{
+                    OR:[
+                        {
+                            receiverId,
+                            senderId:socket.userId
+                        },{
+                            receiverId:socket.userID,
+                            senderId:receiverId
+                        }
+                    ]
+                },
+                orderBy:{createdAt:'asc'}
+            })
+            socket.emit('getMessages',{chatUserId,messages})
+        })
         socket.on('sendMessage',async ({chatUserId,text})=>{
             const receiverId=parseInt(chatUserId)
             const message=await prisma.message.create({
@@ -75,10 +94,13 @@ module.exports=(io)=>{
                 }
             })
 
-            const receiverSocketId=onlineUsers.get(receiverId)
+            const receiverSocketId=onlineUsers.has(receiverId)? onlineUsers.get(receiverId)[0] : null;
             
             if(receiverSocketId){
-                const deliveredMessage={...message,status:'DELIVERED'}
+                const receiverLang=onlineUsers.get(receiverId)[1]
+                const translatedText=await translate(message.text,receiverLang)
+                const nonTranslated= {...message,status:"DELIVERED"}
+                const deliveredMessage={...message,text:translatedText,status:'DELIVERED'}
                 io.to(receiverSocketId).emit('receiveMessage',deliveredMessage);
                 await prisma.message.update({
                     where:{id:message.id},
@@ -86,7 +108,7 @@ module.exports=(io)=>{
                         status:"DELIVERED"
                     }
                 });
-                socket.emit('receiveMessage',deliveredMessage)
+                socket.emit('receiveMessage',nonTranslated)
             }
             else{
                 socket.emit('receiveMessage',message);
@@ -99,11 +121,13 @@ module.exports=(io)=>{
             },
             orderBy:{createdAt:'asc'}
         });
-        pendingMessages.forEach((msg)=>{
-            socket.emit('receiveMessage',{...msg,status:"DELIVERED"})
+        const language= onlineUsers.get(socket.userId)[1]
+        pendingMessages.forEach(async (msg)=>{
+            const msgText= await translate(msg.text,language)
+            socket.emit('receiveMessage',{...msg,text:msgText,status:"DELIVERED"})
         })
         for(const msg of pendingMessages){
-            const senderSocketId=onlineUsers.get(msg.senderId)
+            const senderSocketId=onlineUsers.has(msg.senderId) ? onlineUsers.get(msg.senderId)[0] :null;
             if(senderSocketId){
                 io.to(senderSocketId).emit("messageStatusUpdate",{
                     chatUserId:msg.receiverId,

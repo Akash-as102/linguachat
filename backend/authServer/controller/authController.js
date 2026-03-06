@@ -1,13 +1,15 @@
+require('dotenv').config({path:'../authServer/.env'});
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const prisma = require("../../lib/prisma");
+
 function tokenGenerator(user) {
   return jwt.sign(user, process.env.JWT_ACCESS_KEY);
 }
 module.exports = {
   signup: async (req, res) => {
     try {
-      const { phone, name, password } = req.body;
+      const { phone, name, password,language } = req.body;
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const user = await prisma.user.create({
@@ -15,11 +17,13 @@ module.exports = {
           name,
           phone: phone.toString(),
           password: hashedPassword,
+          language
         },
         select: {
           id: true,
           name: true,
           phone: true,
+          language:true
         },
       });
       const accessToken = tokenGenerator({ userId: user.id });
@@ -44,7 +48,7 @@ module.exports = {
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(401).json({ error: "Invalid password" });
       const accessToken = tokenGenerator({ userId: user.id });
-      const userData = { id: user.id, name: user.name, phone: user.phone };
+      const userData = { id: user.id, name: user.name, phone: user.phone,language:user.language,profileUrl:user.profileUrl };
       return res.status(200).json({ user: userData, accessToken: accessToken });
     } catch (err) {
       console.log(err);
@@ -76,6 +80,7 @@ module.exports = {
         id: true,
         name: true,
         phone: true,
+        language:true
       },
     });
     return res.status(200).json(user);
@@ -125,4 +130,24 @@ module.exports = {
     });
     return res.status(200).json({ message: "Password Updated Successfully" });
   },
+  setLanguage:async (req,res)=>{
+    const user=req.user;
+    const {lang}= req.body;
+    const result= await prisma.user.update({
+      where:{
+        id:user
+      },
+      data:{
+        language:lang
+      },
+      select:{
+        id:true,
+        phone:true,
+        name:true,
+        language:true
+      }
+    })
+    console.log(result)
+    return res.status(200).json(result)
+  }
 };

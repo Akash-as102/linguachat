@@ -11,6 +11,7 @@ module.exports={
                 id:true,
                 name:true,
                 phone:true,
+                profileUrl:true
             }
         })
         if(!user) return res.status(404).json({message:"User Not Found"})

@@ -5,15 +5,17 @@ const {Server}=require('socket.io')
 const socketHandler = require('./lib/Socket')
 const chatRouter=require('./router/chatRouter')
 const searchRouter=require('./router/searchRouter')
+const userRouter = require('./router/userRouter')
 require('dotenv').config()
 
 const app=express()
 app.use(require('cors')({ origin: '*' }))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
-
+app.use('/static',express.static('uploads'));
 
 app.use('/search',searchRouter)
+app.use('/user',userRouter)
 
 const server=http.createServer(app)
 

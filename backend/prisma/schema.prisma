@@ -16,15 +16,17 @@ datasource db {
     
 model User {
   id       Int    @id @default(autoincrement())
-  name     String
+  name     String @unique
   phone    String @unique
   password String
-
+  language String
+  profileUrl String?
   chats Chat[]
   peerChats Chat[] @relation("peerChats")
   sentMessages Message[] @relation("sentMessages")
   receivedMessages Message[] @relation("receivedMessages")
 }
+
 model Message {
   id         Int      @id @default(autoincrement())
   senderId   Int

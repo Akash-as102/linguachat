@@ -2,6 +2,9 @@ import { createContext, useState , useEffect,useContext} from "react"
 import * as SecureStore from "expo-secure-store"
 import api,{setApiTokenHeader} from './api';
 import { useChatStore } from "../store/chatStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system/legacy";
+import cacheProfileImage from "./profileLocalPath";
 
 
 const AuthContext = createContext();
@@ -38,6 +41,10 @@ export function AuthProvider({children}){
             await SecureStore.setItemAsync('token',accessToken);
             setApiTokenHeader(accessToken);
             setUser(user);
+            if(user.profileUrl){
+                const image= await cacheProfileImage(user.id,user.profileUrl);
+                await AsyncStorage.setItem('profileUrl',image)
+            }
             return user
         }
         catch(err){
@@ -49,7 +56,12 @@ export function AuthProvider({children}){
         await SecureStore.deleteItemAsync('token');
         api.defaults.headers.common.Authorization= "";
         useChatStore.persist.clearStorage();
-
+        await AsyncStorage.removeItem('profileUrl')
+        const localPath = `${FileSystem.documentDirectory}user_${user.id}.jpeg`;
+        const fileExists= await FileSystem.getInfoAsync(localPath)
+        if(fileExists.exists){
+            await FileSystem.deleteAsync(localPath)
+        }
         useChatStore.setState({
             chats:{},
             messages:{},
@@ -58,9 +70,9 @@ export function AuthProvider({children}){
         })
         setUser(null);
     }
-    async function signup(name,phone,password) {
+    async function signup(name,phone,password,language) {
         try{
-            const res= await api.post('/auth/signup',{phone,name,password})
+            const res= await api.post('/auth/signup',{phone,name,password,language})
             const {user,accessToken}=res.data
             await SecureStore.setItemAsync("token",accessToken)
             setApiTokenHeader(accessToken);

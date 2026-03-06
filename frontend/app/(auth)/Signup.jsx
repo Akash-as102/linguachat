@@ -7,11 +7,11 @@ import Spacer from '../../components/Spacer.jsx';
 import ThemedText from '../../components/ThemedText.jsx';
 import { LinearGradient } from 'expo-linear-gradient';
 import ThemedButton from '../../components/ThemedButton.jsx';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import ErrorText from '../../components/ErrorText.jsx';
 import { useAuth } from '../../libs/auth-context.jsx';
-
+import LanguageSelect from '../../components/LanguageSelect.jsx';
 
 const Signup = () => {
     const colorScheme=useColorScheme();
@@ -23,6 +23,7 @@ const Signup = () => {
   const [phone,setPhone]=useState("");
   const [password,setPassword]=useState("");
   const [name,setName] = useState('');
+  const [lang,setLang]=useState('en');
 
   const handleSubmit=async ()=>{
     if(phone.length!== 10){
@@ -35,9 +36,8 @@ const Signup = () => {
     }
     setError(null)
     try{
-      await signup(name,phone,password)
-      return router.replace('/Home')
-
+      console.log(lang)
+      await signup(name,phone,password,lang)
     }catch(err){
       setError(err.response?.data.error || "Something went wrong");
     }
@@ -69,6 +69,8 @@ const Signup = () => {
                  onChangeText={setName}
                  value={name}
               />
+              <Spacer />
+              <LanguageSelect value={lang} onChange={setLang} />
               <Spacer />
               <ThemedInput style={styles.input}
                  placeholder="Phone"

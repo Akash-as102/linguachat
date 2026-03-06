@@ -7,6 +7,15 @@ export const useChatStore=create(persist((set,get)=>({
     messages:{},
     activeChatId:null,
     chatOrder:[],
+    loadedConversations:{},
+    profileUrl:{},
+
+    setProfile:(userId,url)=>set(()=>({
+        profileUrl:{
+            ...get().profileUrl,
+            [userId]:url
+        }
+    })),
 
     setActiveChat:(userId)=>set(()=>({
         activeChatId:userId,
@@ -22,7 +31,7 @@ export const useChatStore=create(persist((set,get)=>({
     addMessage:(chatUserId,message,isIncoming)=>set((state)=>{
         const existingChat=state.chats[chatUserId]
         const isActive= state.activeChatId===chatUserId
-        const unreadCount=isIncoming && !isActive ? (existingChat?.unreadCount ?? 0)+1 :0;
+        const unreadCount=isIncoming && !isActive ? (existingChat?.unreadCount ?? 0)+1 :existingChat?.unread ?? 0;
         return {
         messages:{
             ...state.messages,
@@ -58,9 +67,9 @@ export const useChatStore=create(persist((set,get)=>({
     messageStatusUpdate:(chatUserId,messageId,status)=>set((state)=>({
         messages: {
             ...state.messages,
-            [chatUserId]: state.messages[chatUserId]?.map(msg=>{
+            [chatUserId]: state.messages[chatUserId]?.map(msg=>
                 msg.id===messageId?{...msg,status}:msg
-            })
+            )
         }
     })),
     clearActiveChat:()=>set(()=>({
@@ -77,9 +86,13 @@ export const useChatStore=create(persist((set,get)=>({
     })),
     setChats:(chats,order)=>set({chats,chatOrder:order}),
     setMessages:(chatUserId,msgs)=>set((state)=>({
-        messages:{...state.messages,[chatUserId]:msgs}
+        messages:{...state.messages,[chatUserId]:msgs},
+        loadedConversations:{
+            ...state.loadedConversations,
+            [chatUserId]:true
+        }
     }))
-}),{
+}),{    
     name:"chat-storage",
     storage:createJSONStorage(()=>AsyncStorage)
 })

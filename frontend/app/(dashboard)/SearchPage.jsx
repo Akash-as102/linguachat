@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from 'react-native'
-import ThemedLoading from '../../components/ThemedLoading';
 import ThemedView from '../../components/ThemedView';
 import ChatList from '../../components/ChatList';
 import { useChatStore } from '../../store/chatStore';
@@ -11,9 +10,10 @@ import SearchChat from '../../components/SearchChat';
 import SearchError from '../../components/SearchError';
 import mainApi from '../../libs/mainApi';
 import { useFocusEffect } from 'expo-router';
+import cacheProfileImage from '../../libs/profileLocalPath';
 
 const SearchPage = () => {
-  const {chats,clearActiveChat}= useChatStore();
+  const {chats,clearActiveChat,setProfile}= useChatStore();
   const [text,setText]=useState("")
   const [searchResult,setSearchResult]=useState(null);
   const [showEveryUser,setShowEveryUser]=useState(true)
@@ -41,7 +41,17 @@ const SearchPage = () => {
         try {
           const res= await mainApi.get(`/search/searchByPhone/${number}`)
           setError(null)
-          setSearchResult(res.data)
+          let image= null
+          if(res.data.profileUrl){
+           image= await cacheProfileImage(res.data.id,res.data.profileUrl);
+           setProfile(res.data.id,image)
+          }
+          const updated={
+              id:res.data.id,
+              name:res.data.name,
+              phone:res.data.phone,
+            }
+          setSearchResult(updated);
           setShowEveryUser(false)
         } catch (error) {
           setShowEveryUser(false);

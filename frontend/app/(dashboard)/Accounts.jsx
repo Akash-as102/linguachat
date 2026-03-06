@@ -1,12 +1,16 @@
 import { Link, useRouter } from "expo-router";
 import ThemedView from "../../components/ThemedView"
-import { Image, Pressable, StyleSheet } from 'react-native';
+import { Button, Image, Pressable, StyleSheet, Text } from 'react-native';
 import ProfilePic from '../../components/ProfilePic';
 import ThemedText from "../../components/ThemedText";
 import Spacer from "../../components/Spacer";
 import ThemedButton from "../../components/ThemedButton";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
+import { useEffect } from "react";
 
 const Accounts = () => {
+    const [url,setUrl]=useState(null);
     const router=useRouter();
     function handleName(){
         router.push('/ChangeName')
@@ -14,6 +18,12 @@ const Accounts = () => {
     function handlePassword(){
         router.push('/ChangePassword')
     }
+    useEffect(()=>{
+        (async()=>{
+            const storedUrl = await AsyncStorage.getItem("profileUrl");
+            setUrl(storedUrl);
+        })()
+    },[])
     return (
         <ThemedView style={styles.container}>
                 <Spacer />
@@ -21,9 +31,11 @@ const Accounts = () => {
                     width:200,
                     height:200,
                     borderRadius:100
-                }}/>
+                }}
+                url={url}
+                />
                 <Spacer height={15}/>
-                <ThemedText style={{color:'blue'}}>Edit</ThemedText>
+                <Button title="Edit" onPress={()=>router.push('/SetProfile')}/>
                 <Spacer />
                 <ThemedButton style={{
                     borderRadius:0,

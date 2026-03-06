@@ -3,6 +3,7 @@ import { useAuth } from "./auth-context";
 import { connectWS } from "./socket.js";
 import { useChatStore } from "../store/chatStore.js";
 import mainApi from "./mainApi.js";
+import cacheProfileImage from "./profileLocalPath.js";
 
 
 const SocketContext=createContext(null);
@@ -10,58 +11,90 @@ const SocketContext=createContext(null);
 export const SocketProvider=({children})=>{
     const socketRef=useRef(null);
     const {user}=useAuth()
-    const {setChats}=useChatStore();
+    const {setChats,setMessages,messageStatusUpdate,setProfile}=useChatStore();
 
-    useEffect(()=>{
-        if(!user)return;
-        socketRef.current=connectWS(user.id)
+    useEffect(() => {
+  if (!user) return
+  const socket = connectWS(user.id,user.language)
+  socketRef.current = socket
 
-        socketRef.current.on('chatList',(chatList)=>{
-            const chatsMap={}
-            const chatOrder=[]
-            chatList.forEach(chat=>{
-                chatsMap[chat.peerId]={
-                    userId:chat.peerId,
-                    lastMessage:chat.lastMessage,
-                    updatedAt:chat.lastMessageAt,
-                    unreadCount:chat.unreadCount,
-                    name:chat.peer.name,
-                    phone:chat.peer.phone
-                }
-                chatOrder.push(chat.peerId);
-            })
-            setChats(chatsMap,chatOrder)
-        })
+  const onChatList = (chatList) => {
+    const chatsMap = {}
+    const chatOrder = []
 
-        socketRef.current.emit('getChatList');
+    chatList.forEach(async chat => {
+      chatsMap[chat.peerId] = {
+        userId: chat.peerId,
+        lastMessage: chat.lastMessage,
+        updatedAt: chat.lastMessageAt,
+        unreadCount: chat.unreadCount,
+        name: chat.peer.name,
+        phone: chat.peer.phone
+      }
+      chatOrder.push(chat.peerId)
+      const image=await cacheProfileImage(chat.peerId,chat.peer.profileUrl)
+      setProfile(chat.peerId,image)
+    })
 
-        socketRef.current.on("receiveMessage",async (message)=>{
-            const {addMessage,incrementUnread,activeChatId,messageStatusUpdate,chats,setChatUserInfo} =useChatStore.getState()
-            const chatUserId=message.senderId===user.id? message.receiverId:message.senderId
-            const isIncoming=message.senderId!==user.id
-            addMessage(chatUserId,message,isIncoming);
-            
-            if(!chats[chatUserId]?.name){
-                const res=await mainApi.get(`/search/searchId/${chatUserId}`)
-                setChatUserInfo(chatUserId,{
-                    name:res.data.name,
-                    phone:res.data.phone
-                })
-            }
+    setChats(chatsMap, chatOrder)
+  }
 
-            if(activeChatId!==chatUserId){
-                incrementUnread(chatUserId)
-            }
-        })
-        socketRef.current.on('messageStatusUpdate',({chatUserId,messageId,status})=>{
-            messageStatusUpdate(chatUserId,messageId,status);
-        })
+  const onGetMessages = ({ chatUserId, messages }) => {
+    setMessages(chatUserId, messages)
+  }
 
-        return ()=>{
-            socketRef.current?.disconnect();
-            socketRef.current=null;
-        }
-    },[user])
+  const onReceiveMessage = async (message) => {
+    const {
+      addMessage,
+      incrementUnread,
+      activeChatId,
+      messageStatusUpdate,
+      chats,
+      setChatUserInfo
+    } = useChatStore.getState()
+
+    const chatUserId =
+      message.senderId === user.id
+        ? message.receiverId
+        : message.senderId
+
+    const isIncoming = message.senderId !== user.id
+
+    addMessage(chatUserId, message, isIncoming)
+
+    if (!chats[chatUserId]?.name) {
+      const res = await mainApi.get(`/search/searchId/${chatUserId}`)
+      setChatUserInfo(chatUserId, {
+        name: res.data.name,
+        phone: res.data.phone
+      })
+    }
+  }
+  function profileUpdate(url){
+
+  }
+
+  const onMessageStatusUpdate = ({ chatUserId, messageId, status }) => {
+    messageStatusUpdate(chatUserId, messageId, status)
+  }
+
+  socket.on("chatList", onChatList)
+  socket.on("getMessages", onGetMessages)
+  socket.on("receiveMessage", onReceiveMessage)
+  socket.on("messageStatusUpdate", onMessageStatusUpdate)
+
+  socket.emit("getChatList")
+
+  return () => {
+    socket.off("chatList", onChatList)
+    socket.off("getMessages", onGetMessages)
+    socket.off("receiveMessage", onReceiveMessage)
+    socket.off("messageStatusUpdate", onMessageStatusUpdate)
+
+    socket.disconnect()
+    socketRef.current = null
+  }
+}, [user])
 
     return (
         <SocketContext.Provider value={socketRef}>

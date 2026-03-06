@@ -36,7 +36,7 @@ export default ThemedMessageBubble
 const styles=StyleSheet.create({
     messageBubbleLeft: {
     padding: 10,
-    backgroundColor: 'grey',
+    backgroundColor: 'white',
     borderRadius: 8,
     marginVertical: 5,
     alignSelf: 'flex-start', 
@@ -45,7 +45,7 @@ const styles=StyleSheet.create({
   },
   messageBubbleRight:{
     padding: 10,
-    backgroundColor: 'grey',
+    backgroundColor: 'white',
     borderRadius: 8,
     marginVertical: 5,
     alignSelf: 'flex-end',
@@ -56,7 +56,4 @@ const styles=StyleSheet.create({
     maxHeight:collapsedHeight,
     overflow:"hidden"
   },
-  text:{
-    backgroundColor:'grey'
-  }
 })

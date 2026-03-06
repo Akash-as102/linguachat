@@ -27,10 +27,12 @@ const Settings = () => {
         <ThemedText style={styles.heading}>Notifications</ThemedText>
         <ThemedText style={styles.description}>Message,group</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.container}>
-        <ThemedText style={styles.heading}>Language</ThemedText>
-        <ThemedText style={styles.description}>Preferred Language</ThemedText>
-      </ThemedView>
+      <Link href="/ChangeLanguage">
+        <ThemedView style={styles.container}>
+          <ThemedText style={styles.heading}>Language</ThemedText>
+          <ThemedText style={styles.description}>Preferred Language</ThemedText>
+        </ThemedView>
+      </Link>
       <ThemedButton onPress={handleLogout} style={styles.logout}>
         <Text style={{
           fontSize:15,

@@ -31,6 +31,7 @@ const DashboardLayout = () => {
             <Stack.Screen name='ChangePassword' options={{title:'Reset Password'}} />
             <Stack.Screen name='ChatPage' options={{headerShown:false}} />
             <Stack.Screen name='SearchPage' options={{headerShown:false}} />
+            <Stack.Screen name="SetProfile" options={{title:'Set Profile Picture'}} />
           </Stack>
         </SocketProvider>
     </RouteGuard>
