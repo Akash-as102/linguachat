@@ -10,13 +10,50 @@ export const useChatStore=create(persist((set,get)=>({
     loadedConversations:{},
     profileUrl:{},
 
-    setProfile:(userId,url)=>set(()=>({
+    setProfile:(userId,url)=>set((state)=>({
         profileUrl:{
             ...get().profileUrl,
             [userId]:url
         }
     })),
+    deleteChat:(userId,sent)=>set((state)=>{
+        const newChats = {...state.chats}
+        const newMessages = {...state.messages}
+        delete newChats[userId]
+        delete newMessages[userId]
+        return {
+            chats: newChats,
+            messages: newMessages,
+            chatOrder: state.chatOrder.filter(id => id !== userId),
+            activeChatId: state.activeChatId === userId ? null : state.activeChatId
+        }
+    }),
+    deleteMessage: (id, edit, userId) => set((state) => {
+        const updatedMessages = !edit
+        ? state.messages[userId]?.filter(msg => msg.id !== id)
+        : state.messages[userId]?.map(msg =>
+            msg.id == id
+                ? { ...msg, text: "Message Deleted" }
+                : msg
+        )
+    // ✅ Get new last message
+    const lastMessageObj = updatedMessages?.[updatedMessages.length - 1]
+    return {
+        messages: {
+            ...state.messages,
+            [userId]: updatedMessages
+        },
 
+        chats: {
+            ...state.chats,
+            [userId]: {
+                ...state.chats[userId],
+                lastMessage: lastMessageObj || "",
+                updatedAt: lastMessageObj?.createdAt || Date.now()
+            }
+        }
+    }
+}),
     setActiveChat:(userId)=>set(()=>({
         activeChatId:userId,
         chats:{
@@ -31,7 +68,7 @@ export const useChatStore=create(persist((set,get)=>({
     addMessage:(chatUserId,message,isIncoming)=>set((state)=>{
         const existingChat=state.chats[chatUserId]
         const isActive= state.activeChatId===chatUserId
-        const unreadCount=isIncoming && !isActive ? (existingChat?.unreadCount ?? 0)+1 :existingChat?.unread ?? 0;
+        const unreadCount=isIncoming && !isActive ? (existingChat?.unreadCount ?? 0)+1 :existingChat?.unreadCount ?? 0;
         return {
         messages:{
             ...state.messages,

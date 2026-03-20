@@ -7,4 +7,5 @@ const authController=require("../../authServer/controller/authController")
 userRouter.post('/profilePic',authController.authentication,upload.single('image'),userController.setProfilePic)
 userRouter.post('/deleteProfilePic',authController.authentication,userController.deleteProfilePic)
 userRouter.get('/profilePic/:id',userController.getProfileUrl)
+userRouter.post('/deleteMessage',userController.deleteMessage)
 module.exports=userRouter

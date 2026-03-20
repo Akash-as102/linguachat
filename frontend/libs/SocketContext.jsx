@@ -11,7 +11,7 @@ const SocketContext=createContext(null);
 export const SocketProvider=({children})=>{
     const socketRef=useRef(null);
     const {user}=useAuth()
-    const {setChats,setMessages,messageStatusUpdate,setProfile}=useChatStore();
+    const {setChats,setMessages,messageStatusUpdate,setProfile,deleteMessage,messages}=useChatStore();
 
     useEffect(() => {
   if (!user) return
@@ -70,8 +70,8 @@ export const SocketProvider=({children})=>{
       })
     }
   }
-  function profileUpdate(url){
-
+  const onDeleteMessage= ({messageId,senderId})=>{
+    deleteMessage(messageId,true,senderId);
   }
 
   const onMessageStatusUpdate = ({ chatUserId, messageId, status }) => {
@@ -82,6 +82,7 @@ export const SocketProvider=({children})=>{
   socket.on("getMessages", onGetMessages)
   socket.on("receiveMessage", onReceiveMessage)
   socket.on("messageStatusUpdate", onMessageStatusUpdate)
+  socket.on('deleteMessage', onDeleteMessage)
 
   socket.emit("getChatList")
 

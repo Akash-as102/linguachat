@@ -46,8 +46,8 @@ const ThemedChat = ({style,name,chatUserId,unreadCount,lastMessageTime,isSearch=
         <View style={{
             flexDirection:'row',
             height:60,
-            marginHorizontal:15,
-            flex:1
+            flex:1,
+            // marginVertical:20,
         }}>
             <Pressable onPress={()=>setPreview(true)}>
                 <ProfilePic url={profileUrl[chatUserId]}/>
@@ -104,10 +104,10 @@ const styles=StyleSheet.create({
         maxHeight:20,
     },
     overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.9)",
-    justifyContent: "center",
-    alignItems: "center",
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.9)",
+        justifyContent: "center",
+        alignItems: "center",
     },
     previewImage: {
         width: 260,

@@ -74,12 +74,13 @@ const SearchPage = () => {
       },[])
     )
   return (
-    <SafeAreaView style={{flex:1}}>
+    <SafeAreaView style={{flex:1,backgroundColor:'white'}}>
         <View style={styles.search}>
             <EvilIcons name="search" size={28} color='black' />
             <ThemedInput style={{
-                backgroundColor:'grey',
-                width:'85%'
+                backgroundColor:'#6389AD',
+                width:'85%',
+                fontFamily:'serif',
             }}
                 placeholder="Search name or mobile number"
                 value={text}
@@ -100,16 +101,18 @@ export default SearchPage
 
 const styles = StyleSheet.create({
   view:{
-    flex:1
+    flex:1,
+    // padding:15
   },
   search:{
     flexDirection:'row',
     justifyContent:"center",
     alignItems:'center',
-    backgroundColor:'grey',
+    backgroundColor:'#6389AD',
     borderRadius:40,
     width:'95%',
     alignSelf:'center',
-    margin:10
+    margin:10,
+    borderWidth:1
   }
 })

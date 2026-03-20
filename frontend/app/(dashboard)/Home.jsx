@@ -9,7 +9,7 @@ import { useFocusEffect } from 'expo-router';
 
 const Home = () => {
   const {user}=useAuth();
-  const {clearActiveChat,activeChatId}= useChatStore();
+  const {clearActiveChat,}= useChatStore();
 
   useFocusEffect(
     useCallback(()=>{
@@ -29,6 +29,7 @@ export default Home
 
 const styles = StyleSheet.create({
   view:{
-    flex:1
+    flex:1,
+    backgroundColor:'white'
   }
 })

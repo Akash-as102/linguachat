@@ -26,6 +26,16 @@ module.exports=(io)=>{
             })
             socket.emit('chatList',chatList);
         })
+        // deleteMessage --------------
+
+        socket.on('deleteMessage',({senderId,id,userId})=>{
+            const receiverId=parseInt(userId);
+            const messageId=parseInt(id);
+            const receiverSocketId=onlineUsers.has(receiverId)? onlineUsers.get(receiverId)[0] : null;
+            if(receiverSocketId) io.to(receiverSocketId).emit('deleteMessage',{messageId,senderId});
+        })
+
+
         socket.on('getMessages',async ({chatUserId})=>{
             const receiverId=parseInt(chatUserId)
             const messages=await prisma.message.findMany({

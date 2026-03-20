@@ -12,18 +12,20 @@ const FakeSearchBar = ({style}) => {
     const router=useRouter()
   return (
       <Pressable onPress={()=>router.push('/SearchPage')} style={[{
-        width:'80%'
+        width:'80%',
       },style]} >
         <ThemedView style={{
           flexDirection:'row',
           padding:8,
           borderRadius:20,
-          backgroundColor:theme.searchBackground,
+          backgroundColor:"#03346E",
           alignItems:'center',
+          opacity:0.8
         }} >
           <EvilIcons name="search" size={24} color='black' />
           <ThemedText style={{
-            marginHorizontal:8
+            marginHorizontal:8,
+            fontFamily:'serif'
           }}>SEARCH</ThemedText>
         </ThemedView>
       </Pressable>

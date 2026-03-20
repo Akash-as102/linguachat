@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useLocalSearchParams } from "expo-router"
 import { useEffect, useRef, useState } from "react"
 
-import ThemedView from "../../components/ThemedView"
+import AntDesign from '@expo/vector-icons/AntDesign';
 import ThemedText from "../../components/ThemedText"
 import ThemedInput from "../../components/ThemedInput"
 import ThemedButton from "../../components/ThemedButton"
@@ -23,8 +23,9 @@ const INPUT_HEIGHT = 70
 const ChatPage = () => {
   const { chatUserId, name } = useLocalSearchParams()
   const [text, setText] = useState("")
+  const {profileUrl}=useChatStore()
 
-  const { messages, loadedConversations } = useChatStore()
+  const { messages, loadedConversations, deleteMessage} = useChatStore()
   const chatUserMessages = messages[chatUserId] || []
 
   const socketRef = useSocket()
@@ -87,12 +88,29 @@ const ChatPage = () => {
     setText("")
   }
 
+  // --------------------- delete message ------------------
+
+    function handleDeleteMessage(id, edit, userId,senderId=null) {
+
+      deleteMessage(id, edit, userId)
+
+      if (socketRef.current) {
+          socketRef.current.emit('deleteMessage', {
+              senderId,
+              id,
+              userId
+          })
+      }
+}
+  
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1,marginTop:-40}}>
       {/* Header */}
-      <ThemedView style={styles.header}>
+      {/* <ThemedView style={styles.header}>
+        <ProfilePic url={profileUrl[chatUserId]}/>
         <ThemedText style={styles.headerText}>{name}</ThemedText>
-      </ThemedView>
+      </ThemedView> */}
 
       {/* Messages */}
       <Animated.FlatList
@@ -102,7 +120,7 @@ const ChatPage = () => {
         renderItem={({ item }) => {
           const isSent =
             socketRef.current.auth.userId === item.senderId
-          return <ThemedMessageBubble item={item} isSent={isSent} />
+          return <ThemedMessageBubble item={item} isSent={isSent} onDelete={handleDeleteMessage}/>
         }}
         keyboardShouldPersistTaps="handled"
         removeClippedSubviews={false}
@@ -123,7 +141,9 @@ const ChatPage = () => {
           styles.message,
           {
             bottom: keyboardOffset,
-            marginBottom:10
+            marginBottom:10,
+            alignItems:'center',
+            justifyContent:'center'
           },
         ]}
       >
@@ -134,8 +154,8 @@ const ChatPage = () => {
           onChangeText={setText}
           multiline
         />
-        <ThemedButton style={{ width: "20%" }} onPress={handleSend}>
-          <ThemedText>Send</ThemedText>
+        <ThemedButton style={{ width: "13%",borderRadius:'50%',height:"70%",backgroundColor:'#232055',marginLeft:10}} onPress={handleSend}>
+          <AntDesign name="send" size={23} color="white" />
         </ThemedButton>
       </Animated.View>
     </SafeAreaView>
@@ -147,23 +167,27 @@ export default ChatPage
 /* ------------------ Styles ------------------ */
 
 const styles = StyleSheet.create({
-  header: {
-    height: 65,
-    backgroundColor: "#021526",
-    justifyContent: "center",
-    paddingHorizontal: 15,
-  },
-  headerText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color:'white',
-    fontFamily:'serif',
-    fontSize:20,
-    marginLeft:20
-  },
+  // header: {
+  //   height: 65,
+  //   backgroundColor: "#6389AD",
+  //   justifyContent: "center",
+  //   paddingHorizontal: 15,
+  //   elevation:10,
+  //   flexDirection:'row',
+  //   alignItems:"center",
+  //   justifyContent:'flex-start'
+  // },
+  // headerText: {
+  //   fontSize: 18,
+  //   fontWeight: "bold",
+  //   color:'black',
+  //   fontFamily:'serif',
+  //   fontSize:20,
+  //   marginLeft:7
+  // },
   messagesList: {
     flex: 1,
-    backgroundColor: "#03346E",
+    backgroundColor: "white",
   },
   message: {
     position: "absolute",
@@ -172,15 +196,16 @@ const styles = StyleSheet.create({
     height: INPUT_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#03346E",
+    backgroundColor: "white",
     paddingHorizontal: 10,
   },
   input: {
     minHeight: 45,
-    maxHeight: 100,
+    maxHeight: 120,
     backgroundColor: "white",
     borderRadius: 25,
     paddingHorizontal: 15,
     width: "80%",
+    backgroundColor:'#eed8b6'
   },
 })

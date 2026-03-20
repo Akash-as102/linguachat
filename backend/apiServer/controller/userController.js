@@ -58,5 +58,17 @@ module.exports={
             }
         })
         res.status(200).json(url)
-    }
+    },
+    deleteMessage:async (req,res)=>{
+        const {id}=req.body
+        const result=await prisma.message.update({
+            where:{
+                id
+            },
+            data:{
+                text:"Message Deleted"
+            }
+        })
+        return res.status(200).json(result)
+    },
 }

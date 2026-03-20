@@ -29,7 +29,18 @@ const DashboardLayout = () => {
             }} />
             <Stack.Screen name='ChangeName' options={{title:'Reset Name'}} />
             <Stack.Screen name='ChangePassword' options={{title:'Reset Password'}} />
-            <Stack.Screen name='ChatPage' options={{headerShown:false}} />
+            <Stack.Screen
+              name="ChatPage"
+              options={({ route }) => ({
+                header: () => (
+                  <GradientHeader
+                    name={route.params?.name}
+                    chatUserId={route.params?.chatUserId}
+                    style={styles.chatPage}
+                  />
+                ),
+              })}
+            />
             <Stack.Screen name='SearchPage' options={{headerShown:false}} />
             <Stack.Screen name="SetProfile" options={{title:'Set Profile Picture'}} />
           </Stack>
@@ -45,9 +56,14 @@ const styles = StyleSheet.create({
     fontSize:30,
     fontWeight:'bold',
     marginLeft:30,
-    fontFamily:'serif'
+    fontFamily:'serif',
+    color:'#03346E'
   },
   settingHeader:{
     height:130,
+  },
+  chatPage:{
+    backgroundColor:"#6389AD",
+    height:110
   }
 })
